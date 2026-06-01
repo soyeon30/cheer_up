@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>니 놈은 할 수 있어!</title>
+    <!-- 귀여운 느낌을 주기 위해 Jua 폰트를 불러옵니다 -->
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden; /* 스크롤 방지 */
+            font-family: 'Jua', sans-serif;
+            background-color: #000;
+        }
+
+        #sky-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 하늘 배경 레이어들 (자연스러운 색상 전환을 위해 분리) */
+        .sky-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transition: opacity 0.5s ease;
+        }
+        #sky-night {
+            background: linear-gradient(to top, #1a0b2e, #000000);
+            z-index: 1;
+            opacity: 1;
+        }
+        #sky-sunrise {
+            background: linear-gradient(to top, #ff7e5f, #feb47b);
+            z-index: 2;
+            opacity: 0;
+        }
+        #sky-day {
+            background: linear-gradient(to top, #56ccf2, #2f80ed);
+            z-index: 3;
+            opacity: 0;
+        }
+
+        /* 해 스타일 및 애니메이션 */
+        #sun {
+            position: absolute;
+            bottom: -150px; /* 초기 위치 (땅 아래) */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, #fff9c4, #ffeb3b, #fbc02d);
+            border-radius: 50%;
+            box-shadow: 0 0 60px #ffeb3b, 0 0 100px #ff9800;
+            transition: bottom 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); /* 통통 튀는 느낌의 애니메이션 */
+            z-index: 4;
+        }
+
+        /* 땅 (하단 영역) */
+        #ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 15%;
+            background: linear-gradient(to bottom, #2e5c37, #1a3c20);
+            z-index: 5;
+            border-top: 3px solid #4a8255;
+        }
+
+        /* 최종 응원 이미지 팝업 */
+        #image-overlay {
+            position: absolute;
+            top: 45%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            opacity: 0;
+            transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 10;
+            pointer-events: none;
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            max-width: 90vw;
+        }
+
+        #image-overlay img {
+            max-width: 100%;
+            max-height: 50vh;
+            border-radius: 10px;
+        }
+
+        /* 이미지가 없을 때를 대비한 대체 텍스트 영역 */
+        #fallback-content {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+        .fallback-text {
+            color: #38ada9;
+            font-size: 3rem;
+            margin: 10px 0;
+        }
+        .fallback-icon {
+            font-size: 5rem;
+            color: #ff7675;
+        }
+
+        /* 하단 조작 버튼 */
+        #controls {
+            position: absolute;
+            bottom: 5%;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        #rise-btn {
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            font-family: 'Jua', sans-serif;
+            color: #fff;
+            background: #ff6b6b;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #ee5253, 0 10px 20px rgba(0,0,0,0.3);
+            transition: transform 0.1s, box-shadow 0.1s, background 0.3s;
+        }
+
+        #rise-btn:active {
+            transform: translateY(6px);
+            box-shadow: 0 0px 0 #ee5253, 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        #rise-btn:disabled {
+            background: #c8d6e5;
+            box-shadow: 0 6px 0 #8395a7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* 파티클 효과용 캔버스 */
+        #confetti-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 20;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sky-container">
+        <!-- 배경 레이어들 -->
+        <div id="sky-night" class="sky-layer"></div>
+        <div id="sky-sunrise" class="sky-layer"></div>
+        <div id="sky-day" class="sky-layer"></div>
+
+        <!-- 해와 땅 -->
+        <div id="sun"></div>
+        <div id="ground"></div>
+        
+        <canvas id="confetti-canvas"></canvas>
+
+        <!-- 결과 이미지 오버레이 -->
+        <div id="image-overlay">
+            <!-- 사용자가 업로드한 이미지를 렌더링합니다. 이미지가 깨질 경우 귀여운 텍스트로 대체됩니다. -->
+            <img id="cheer-image" src="075aa4ba48b888c632b28e44d8730934 (1).jpg" alt="니 놈은 할수있어!" 
+                 onerror="this.style.display='none'; document.getElementById('fallback-content').style.display='flex';">
+            
+            <div id="fallback-content">
+                <div class="fallback-icon">🐻✨</div>
+                <div class="fallback-text">니 놈은<br>할수있어!</div>
+            </div>
+        </div>
+
+        <!-- 하단 버튼 -->
+        <div id="controls">
+            <button id="rise-btn">해 띄우기 ☀️</button>
+        </div>
+    </div>
+
+    <script>
+        const btn = document.getElementById('rise-btn');
+        const sun = document.getElementById('sun');
+        const layerSunrise = document.getElementById('sky-sunrise');
+        const layerDay = document.getElementById('sky-day');
+        const overlay = document.getElementById('image-overlay');
+
+        // 총 몇 번을 눌러야 해가 완전히 뜨는지 설정합니다.
+        const maxClicks = 5;
+        let currentClicks = 0;
+
+        btn.addEventListener('click', () => {
+            currentClicks++;
+            
+            // 진행도 계산 (0.0 ~ 1.0)
+            const progress = currentClicks / maxClicks;
+
+            // 1. 해 위치 업데이트 (바닥 -10% 에서 위쪽 60%까지 이동)
+            const startBottom = -10; 
+            const endBottom = 65; 
+            const newBottom = startBottom + (endBottom - startBottom) * progress;
+            sun.style.bottom = `${newBottom}%`;
+
+            // 2. 하늘 색상 전환 애니메이션
+            if (progress <= 0.5) {
+                // 처음 절반: 밤 -> 일출
+                let sunriseOpacity = progress / 0.5;
+                layerSunrise.style.opacity = sunriseOpacity;
+                layerDay.style.opacity = 0;
+            } else {
+                // 나중 절반: 일출 -> 낮
+                let dayOpacity = (progress - 0.5) / 0.5;
+                layerSunrise.style.opacity = 1 - dayOpacity;
+                layerDay.style.opacity = dayOpacity;
+            }
+
+            // 3. 해가 다 떴을 때의 처리
+            if (currentClicks >= maxClicks) {
+                btn.disabled = true;
+                btn.innerText = '응원 완료! 🎉';
+
+                // 해가 완전히 올라가는 애니메이션(0.8초)이 끝난 후 이미지를 띄웁니다.
+                setTimeout(() => {
+                    overlay.style.opacity = '1';
+                    overlay.style.transform = 'translate(-50%, -50%) scale(1)';
+                    overlay.style.pointerEvents = 'auto';
+                    fireConfetti(); // 축하 파티클 효과 실행
+                }, 800);
+            }
+        });
+
+        // (선택) 마지막에 터지는 간단한 축하 파티클 애니메이션
+        function fireConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            const colors = ['#ff6b6b', '#feca57', '#48dbfb', '#ff9f43', '#1dd1a1'];
+
+            for (let i = 0; i < 100; i++) {
+                particles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2 + 50,
+                    r: Math.random() * 6 + 2,
+                    dx: Math.random() * 20 - 10,
+                    dy: Math.random() * -20 - 5,
+                    color: colors[Math.floor(Math.random() * colors.length)]
+                });
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                particles.forEach((p, index) => {
+                    p.dy += 0.5; // 중력
+                    p.x += p.dx;
+                    p.y += p.dy;
+                    
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color;
+                    ctx.fill();
+
+                    if (p.y > canvas.height) {
+                        particles.splice(index, 1);
+                    }
+                });
+            }
+            animate();
+        }
+    </script>
+</body>
+</html>

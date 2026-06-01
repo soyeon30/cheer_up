@@ -246,6 +246,18 @@
             z-index: 20;
             pointer-events: none;
         }
+        @media (max-width: 600px) {
+            .fallback-text {
+                font-size: 2rem; /* 글자 크기를 스마트폰에 맞게 줄임 */
+                word-break: keep-all; /* 단어가 이상하게 잘리지 않도록 보호 */
+            }
+            .fallback-icon {
+                font-size: 3.5rem; /* 곰돌이 이모티콘 크기도 살짝 줄임 */
+            }
+            #image-overlay {
+                padding: 15px; /* 하얀색 팝업창 안쪽 여백을 조금 줄여서 덜 답답하게 함 */
+            }
+        }
     </style>
 </head>
 <body>

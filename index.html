@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>니 놈은 할 수 있어!</title>
+    <title>너는 할 수 있어!</title>
     <!-- 귀여운 느낌을 주기 위해 Jua 폰트를 불러옵니다 -->
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
     <style>
@@ -50,6 +50,49 @@
             opacity: 0;
         }
 
+        /* 댄스 홀 배경 (클럽 조명과 레이저) */
+        #dance-hall-bg {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 3; /* 낮 배경과 같은 높이 */
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            background: #000;
+            overflow: hidden;
+            pointer-events: none; /* 클릭 방해 방지 */
+        }
+        #dance-hall-bg.show {
+            opacity: 1;
+            animation: clubBgFlash 1s infinite alternate;
+        }
+        
+        /* 쿵짝쿵짝 클럽 네온 조명 */
+        @keyframes clubBgFlash {
+            0% { background: radial-gradient(circle at 50% 50%, rgba(43,0,255,0.8), #000 80%); }
+            33% { background: radial-gradient(circle at 50% 50%, rgba(255,0,234,0.8), #000 80%); }
+            66% { background: radial-gradient(circle at 50% 50%, rgba(0,255,234,0.8), #000 80%); }
+            100% { background: radial-gradient(circle at 50% 50%, rgba(255,0,85,0.8), #000 80%); }
+        }
+
+        /* 화려한 레이저 빔 */
+        .laser {
+            position: absolute;
+            bottom: -20%;
+            width: 8px;
+            height: 150%;
+            background: white;
+            transform-origin: bottom center;
+            border-radius: 50%;
+            mix-blend-mode: screen;
+        }
+        .laser-1 { left: 15%; box-shadow: 0 0 40px 20px #ff00ea; animation: sweep 1.8s infinite alternate ease-in-out; }
+        .laser-2 { left: 50%; box-shadow: 0 0 40px 20px #00ffea; animation: sweep-rev 2.4s infinite alternate ease-in-out; }
+        .laser-3 { right: 15%; box-shadow: 0 0 40px 20px #2aff00; animation: sweep 2.1s infinite alternate ease-in-out; }
+        
+        @keyframes sweep { 0% { transform: rotate(-55deg); } 100% { transform: rotate(55deg); } }
+        @keyframes sweep-rev { 0% { transform: rotate(55deg); } 100% { transform: rotate(-55deg); } }
+
         /* 해 스타일 및 애니메이션 */
         #sun {
             position: absolute;
@@ -61,8 +104,20 @@
             background: radial-gradient(circle, #fff9c4, #ffeb3b, #fbc02d);
             border-radius: 50%;
             box-shadow: 0 0 60px #ffeb3b, 0 0 100px #ff9800;
-            transition: bottom 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); /* 통통 튀는 느낌의 애니메이션 */
+            transition: bottom 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.5s; /* 통통 튀는 느낌 */
             z-index: 4;
+        }
+
+        /* 미러볼(Disco ball)로 변신하는 해 */
+        #sun.disco-mode {
+            background: #d4d4d4;
+            background-image: 
+                linear-gradient(45deg, rgba(0,0,0,0.2) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.2) 75%, rgba(0,0,0,0.2)), 
+                linear-gradient(45deg, rgba(0,0,0,0.2) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.2) 75%, rgba(0,0,0,0.2));
+            background-size: 24px 24px;
+            background-position: 0 0, 12px 12px;
+            box-shadow: 0 0 40px #fff, 0 0 80px #ff00ea, inset 0 0 20px #333;
+            animation: spinCard 5s linear infinite;
         }
 
         /* 땅 (하단 영역) */
@@ -81,20 +136,42 @@
             position: absolute;
             top: 45%;
             left: 50%;
-            transform: translate(-50%, -50%) scale(0.5);
+            transform: translate(-50%, -50%) scale(0); /* 초기 크기를 0으로 */
             opacity: 0;
-            transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
             z-index: 10;
             pointer-events: none;
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
             padding: 20px;
-            border-radius: 20px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            border-radius: 30px;
             display: flex;
             justify-content: center;
             align-items: center;
             text-align: center;
             max-width: 90vw;
+            border: 5px solid #ffeaa7; /* 액자 같은 테두리 추가 */
+        }
+
+        /* 이미지가 나타날 때의 화려한 클래스 */
+        #image-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+            /* 1초 동안 튕기며 나타난 후, 1초 뒤부터 4초 주기로 무한히 회전합니다 */
+            animation: popInBounce 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, spinCard 4s linear 1s infinite;
+            box-shadow: 0 0 50px rgba(255, 235, 59, 0.8), 0 0 100px rgba(255, 105, 180, 0.5), 0 20px 40px rgba(0,0,0,0.4); /* 빛나는 효과 */
+        }
+
+        /* 튕기며 나타나는 애니메이션 */
+        @keyframes popInBounce {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            40% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+            70% { transform: translate(-50%, -50%) scale(0.95); }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        /* 이미지 자체가 빙글빙글 도는 애니메이션 */
+        @keyframes spinCard {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
         }
 
         #image-overlay img {
@@ -174,6 +251,13 @@
         <div id="sky-sunrise" class="sky-layer"></div>
         <div id="sky-day" class="sky-layer"></div>
 
+        <!-- 댄스 홀 배경 (레이저와 네온 조명) -->
+        <div id="dance-hall-bg">
+            <div class="laser laser-1"></div>
+            <div class="laser laser-2"></div>
+            <div class="laser laser-3"></div>
+        </div>
+
         <!-- 해와 땅 -->
         <div id="sun"></div>
         <div id="ground"></div>
@@ -183,12 +267,12 @@
         <!-- 결과 이미지 오버레이 -->
         <div id="image-overlay">
             <!-- 사용자가 업로드한 이미지를 렌더링합니다. 이미지가 깨질 경우 귀여운 텍스트로 대체됩니다. -->
-            <img id="cheer-image" src="075aa4ba48b888c632b28e44d8730934 (1).jpg" alt="니 놈은 할수있어!" 
+            <img id="cheer-image" src="075aa4ba48b888c632b28e44d8730934 (1).jpg" alt="너는 할 수 있어!" 
                  onerror="this.style.display='none'; document.getElementById('fallback-content').style.display='flex';">
             
             <div id="fallback-content">
                 <div class="fallback-icon">🐻✨</div>
-                <div class="fallback-text">니 놈은<br>할수있어!</div>
+                <div class="fallback-text">너는<br>할 수 있어!</div>
             </div>
         </div>
 
@@ -203,6 +287,7 @@
         const sun = document.getElementById('sun');
         const layerSunrise = document.getElementById('sky-sunrise');
         const layerDay = document.getElementById('sky-day');
+        const danceHallBg = document.getElementById('dance-hall-bg');
         const overlay = document.getElementById('image-overlay');
 
         // 총 몇 번을 눌러야 해가 완전히 뜨는지 설정합니다.
@@ -241,15 +326,15 @@
 
                 // 해가 완전히 올라가는 애니메이션(0.8초)이 끝난 후 이미지를 띄웁니다.
                 setTimeout(() => {
-                    overlay.style.opacity = '1';
-                    overlay.style.transform = 'translate(-50%, -50%) scale(1)';
-                    overlay.style.pointerEvents = 'auto';
-                    fireConfetti(); // 축하 파티클 효과 실행
+                    danceHallBg.classList.add('show'); // 클럽 조명 켜기
+                    sun.classList.add('disco-mode'); // 해를 미러볼로 바꾸기
+                    overlay.classList.add('show');
+                    fireConfetti(); // 화려해진 축하 파티클 효과 실행
                 }, 800);
             }
         });
 
-        // (선택) 마지막에 터지는 간단한 축하 파티클 애니메이션
+        // 화려하게 팡! 터지는 축하 파티클 애니메이션
         function fireConfetti() {
             const canvas = document.getElementById('confetti-canvas');
             const ctx = canvas.getContext('2d');
@@ -257,16 +342,21 @@
             canvas.height = window.innerHeight;
 
             const particles = [];
-            const colors = ['#ff6b6b', '#feca57', '#48dbfb', '#ff9f43', '#1dd1a1'];
+            // 더 다양해진 색상
+            const colors = ['#ff6b6b', '#feca57', '#48dbfb', '#ff9f43', '#1dd1a1', '#ff9ff3', '#f368e0', '#f1c40f'];
 
-            for (let i = 0; i < 100; i++) {
+            // 파티클 개수 대폭 증가 및 폭발하는 듯한 물리 효과
+            for (let i = 0; i < 250; i++) {
                 particles.push({
                     x: canvas.width / 2,
-                    y: canvas.height / 2 + 50,
-                    r: Math.random() * 6 + 2,
-                    dx: Math.random() * 20 - 10,
-                    dy: Math.random() * -20 - 5,
-                    color: colors[Math.floor(Math.random() * colors.length)]
+                    y: canvas.height * 0.6, // 화면 중앙에서 터짐
+                    size: Math.random() * 12 + 4,
+                    dx: (Math.random() - 0.5) * (Math.random() * 40), // 좌우로 강하게 흩어짐
+                    dy: (Math.random() - 0.5) * (Math.random() * 40) - 10, // 위로 솟구침
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    shape: Math.random() > 0.5 ? 'circle' : 'rect', // 원형과 네모 모양 혼합
+                    angle: Math.random() * 360, // 회전 각도
+                    spin: (Math.random() - 0.5) * 20 // 회전 속도
                 });
             }
 
@@ -275,16 +365,27 @@
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 
                 particles.forEach((p, index) => {
-                    p.dy += 0.5; // 중력
+                    p.dy += 0.4; // 중력 가속도 (아래로 떨어짐)
                     p.x += p.dx;
                     p.y += p.dy;
+                    p.angle += p.spin; // 도형 회전
+                    
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.angle * Math.PI / 180);
                     
                     ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    if (p.shape === 'circle') {
+                        ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+                    } else {
+                        ctx.rect(-p.size / 2, -p.size / 2, p.size, p.size);
+                    }
                     ctx.fillStyle = p.color;
                     ctx.fill();
+                    ctx.restore();
 
-                    if (p.y > canvas.height) {
+                    // 화면 밖으로 나가면 파티클 제거
+                    if (p.y > canvas.height + 50 || p.x < -50 || p.x > canvas.width + 50) {
                         particles.splice(index, 1);
                     }
                 });
